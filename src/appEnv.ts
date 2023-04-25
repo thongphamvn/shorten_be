@@ -3,7 +3,7 @@ export type AppEnv = {
   issuerBaseUrl: string
   audience: string
   port: number
-  clientOriginUrl?: string
+  clientOriginUrls: string[]
 }
 
 export const appEnv = (): AppEnv => {
@@ -12,7 +12,9 @@ export const appEnv = (): AppEnv => {
     mongoUri: process.env.MONGO_URI,
     issuerBaseUrl: process.env.ISSUER_BASE_URL,
     audience: process.env.AUDIENCE,
-    clientOriginUrl: process.env.CLIENT_ORIGIN_URL || 'http://localhost:4200',
+    clientOriginUrls: (
+      process.env.CLIENT_ORIGIN_URL || 'http://localhost:4200'
+    ).split(','),
   }
 
   // check required env

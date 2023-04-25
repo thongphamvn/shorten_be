@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Redirect } from '@nestjs/common'
+import { Body, Controller, Get, Param, Post } from '@nestjs/common'
 import { ShortenUrlDto } from './dto'
 import { RedirectResponse, ShortenResponse } from './response'
 import { ShortenService } from './shorten.service'
@@ -13,7 +13,6 @@ export class PublicShortenController {
   }
 
   @Get(':shortUrl')
-  @Redirect()
   async findOne(
     @Param('shortUrl') shortUrl: string
   ): Promise<RedirectResponse> {

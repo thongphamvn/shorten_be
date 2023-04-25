@@ -12,4 +12,7 @@ export class ShortenResponse implements ShortenUrlType {
   shortUrl: string
 }
 
-export type RedirectResponse = { url: string; statusCode: number }
+export class RedirectResponse {
+  @Expose()
+  url: string
+}

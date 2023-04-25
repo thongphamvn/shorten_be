@@ -1,12 +1,12 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { nanoid } from 'nanoid'
+import { toResponse } from 'src/utils/utils'
 import { AuthUser } from '../auth/auth.guard'
 import { ShortenUrl, ShortenUrlDoc } from '../models/short-url.model'
 import { ShortenUrlDto, ShortenUrlParams } from './dto'
 import { RedirectResponse, ShortenResponse } from './response'
-import { toResponse } from 'src/utils/utils'
 
 @Injectable()
 export class ShortenService {
@@ -49,7 +49,7 @@ export class ShortenService {
       throw new NotFoundException('Short URL not found')
     }
 
-    return { url: doc.originalUrl, statusCode: HttpStatus.PERMANENT_REDIRECT }
+    return { url: doc.originalUrl }
   }
 
   async publicCreate(dto: ShortenUrlDto): Promise<ShortenResponse> {
@@ -57,7 +57,7 @@ export class ShortenService {
       ...dto,
       shortUrl: nanoid(7),
     })
-    console.log(doc)
+
     return toResponse(ShortenResponse)(doc)
   }
 }

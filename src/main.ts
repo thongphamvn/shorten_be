@@ -22,13 +22,12 @@ async function bootstrap() {
     })
   )
 
-  // app.enableCors({
-  //   origin: configService.get<string>('clientOriginUrl'),
-  //   methods: ['*'],
-  //   allowedHeaders: ['Authorization', 'Content-Type'],
-  //   maxAge: 86400,
-  // })
-  app.enableCors()
+  app.enableCors({
+    origin: configService.get<string>('clientOriginUrls'),
+    methods: ['*'],
+    allowedHeaders: ['Authorization', 'Content-Type'],
+    maxAge: 86400,
+  })
 
   const port = configService.get('port')
   await app.listen(port || 3000)
