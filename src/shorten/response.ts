@@ -12,6 +12,11 @@ export class ShortenResponse implements ShortenUrlType {
   shortUrl: string
 }
 
+export class SHortenDetailResponse extends ShortenResponse {
+  @Expose()
+  createdAt: Date
+}
+
 export class RedirectResponse {
   @Expose()
   url: string

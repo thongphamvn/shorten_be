@@ -11,7 +11,11 @@ import { toResponse } from 'src/utils/utils'
 import { AuthUser } from '../auth/auth.guard'
 import { ShortenUrl, ShortenUrlDoc } from '../models/short-url.model'
 import { ShortenUrlDto, ShortenUrlParams } from './dto'
-import { RedirectResponse, ShortenResponse } from './response'
+import {
+  RedirectResponse,
+  SHortenDetailResponse,
+  ShortenResponse,
+} from './response'
 
 @Injectable()
 export class ShortenService {
@@ -61,13 +65,21 @@ export class ShortenService {
     user: AuthUser,
     { shortUrl }: ShortenUrlParams
   ): Promise<ShortenResponse> {
-    return this.shorten
-      .findOne({ shortUrl, ownerId: user.id })
-      .then(toResponse(ShortenResponse))
+    const short = await this.shorten.findOne({ shortUrl, ownerId: user.id })
+
+    if (!short) {
+      throw new NotFoundException('Short URL not found')
+    }
+    return toResponse(SHortenDetailResponse)(short)
   }
 
   async remove(user: AuthUser, { shortUrl }: ShortenUrlParams): Promise<void> {
-    await this.shorten.findOneAndRemove({ ownerId: user.id, shortUrl })
+    const doc = await this.shorten.findOne({ shortUrl })
+    if (!doc) {
+      throw new NotFoundException('Short URL not found')
+    }
+
+    await this.shorten.deleteOne({ _id: doc.id })
   }
 
   async getAndRedirect(shortUrl: string): Promise<RedirectResponse> {
@@ -79,12 +91,12 @@ export class ShortenService {
     return { url: doc.originalUrl }
   }
 
-  async publicCreate(dto: ShortenUrlDto): Promise<ShortenResponse> {
-    const doc = await this.shorten.create({
-      ...dto,
-      shortUrl: nanoid(7),
-    })
+  // async publicCreate(dto: ShortenUrlDto): Promise<ShortenResponse> {
+  //   const doc = await this.shorten.create({
+  //     ...dto,
+  //     shortUrl: nanoid(7),
+  //   })
 
-    return toResponse(ShortenResponse)(doc)
-  }
+  //   return toResponse(ShortenResponse)(doc)
+  // }
 }
