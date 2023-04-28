@@ -3,6 +3,8 @@ export type ShortenUrlType = {
   originalUrl: string
   shortUrl: string
   ownerId?: string
+  statistics?: Record<string, number>
+  totalClicks?: number
 }
 
 export type UserType = {

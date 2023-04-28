@@ -89,6 +89,22 @@ export class ShortenService {
       throw new NotFoundException('Short URL not found')
     }
 
+    const currentDate = new Date()
+    const currentMonth = currentDate.getMonth()
+    const currentYear = currentDate.getFullYear()
+
+    const month = `${currentMonth}-${currentYear}`
+
+    this.shorten.updateOne(
+      { shortUrl: doc.shortUrl },
+      {
+        $inc: {
+          totalClicks: 1,
+          [`statistics.${month}`]: 1,
+        },
+      }
+    )
+
     return { url: doc.originalUrl, statusCode: HttpStatus.PERMANENT_REDIRECT }
   }
 }
