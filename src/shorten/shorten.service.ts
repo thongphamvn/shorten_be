@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
@@ -74,7 +75,7 @@ export class ShortenService {
   }
 
   async remove(user: AuthUser, { shortUrl }: ShortenUrlParams): Promise<void> {
-    const doc = await this.shorten.findOne({ shortUrl })
+    const doc = await this.shorten.findOne({ shortUrl, ownerId: user.id })
     if (!doc) {
       throw new NotFoundException('Short URL not found')
     }
@@ -88,15 +89,6 @@ export class ShortenService {
       throw new NotFoundException('Short URL not found')
     }
 
-    return { url: doc.originalUrl }
+    return { url: doc.originalUrl, statusCode: HttpStatus.PERMANENT_REDIRECT }
   }
-
-  // async publicCreate(dto: ShortenUrlDto): Promise<ShortenResponse> {
-  //   const doc = await this.shorten.create({
-  //     ...dto,
-  //     shortUrl: nanoid(7),
-  //   })
-
-  //   return toResponse(ShortenResponse)(doc)
-  // }
 }

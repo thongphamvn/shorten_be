@@ -10,8 +10,8 @@ async function bootstrap() {
   const configService = app.get<ConfigService<AppEnv>>(ConfigService)
 
   //
-  const globalPrefix = 'api'
-  app.setGlobalPrefix(globalPrefix)
+  // const globalPrefix = 'api'
+  // app.setGlobalPrefix(globalPrefix)
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -32,9 +32,7 @@ async function bootstrap() {
   const port = configService.get('port')
   await app.listen(port || 3000)
 
-  Logger.log(
-    `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`
-  )
+  Logger.log(`🚀 Application is running on: http://localhost:${port}`)
 }
 
 bootstrap()

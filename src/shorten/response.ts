@@ -20,4 +20,7 @@ export class SHortenDetailResponse extends ShortenResponse {
 export class RedirectResponse {
   @Expose()
   url: string
+
+  @Expose()
+  statusCode: number
 }
