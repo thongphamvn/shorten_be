@@ -1,4 +1,4 @@
-import { Expose, Transform } from 'class-transformer'
+import { Expose } from 'class-transformer'
 import { ShortenUrlType } from '../types'
 
 export class ShortenResponse implements ShortenUrlType {
@@ -12,7 +12,15 @@ export class ShortenResponse implements ShortenUrlType {
   shortUrl: string
 }
 
-export class SHortenDetailResponse extends ShortenResponse {
+export class Statistics {
+  @Expose()
+  month: string
+
+  @Expose()
+  count: number
+}
+
+export class ShortenDetailResponse extends ShortenResponse {
   @Expose()
   createdAt: Date
 
@@ -23,10 +31,7 @@ export class SHortenDetailResponse extends ShortenResponse {
   totalClicks: number
 
   @Expose()
-  @Transform(({ key, obj }) => {
-    return obj?.[key]
-  })
-  statistics: Record<string, number>
+  statistics: Statistics
 }
 
 export class RedirectResponse {

@@ -3,7 +3,12 @@ import { HydratedDocument, Types } from 'mongoose'
 import { ShortenUrlType } from 'src/types'
 import { User } from './user.model'
 
-export type ShortenUrlDoc = HydratedDocument<ShortenUrlType>
+export type ShortenUrlDoc = HydratedDocument<
+  ShortenUrlType & {
+    createdAt: Date
+    updatedAt: Date
+  }
+>
 
 @Schema({
   collection: 'shorten-urls',

@@ -6,6 +6,13 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
+import {
+  addMonths,
+  differenceInMonths,
+  format,
+  startOfMonth,
+  subMonths,
+} from 'date-fns'
 import { Model } from 'mongoose'
 import { nanoid } from 'nanoid'
 import { toResponse } from 'src/utils/utils'
@@ -14,7 +21,7 @@ import { ShortenUrl, ShortenUrlDoc } from '../models/short-url.model'
 import { ShortenUrlDto, ShortenUrlParams } from './dto'
 import {
   RedirectResponse,
-  SHortenDetailResponse,
+  ShortenDetailResponse,
   ShortenResponse,
 } from './response'
 
@@ -71,7 +78,31 @@ export class ShortenService {
     if (!short) {
       throw new NotFoundException('Short URL not found')
     }
-    return toResponse(SHortenDetailResponse)(short)
+
+    const currentMonth = startOfMonth(new Date())
+    const sixMonthBefore = addMonths(new Date(currentMonth), -6)
+    const createdAt = new Date(short.createdAt)
+
+    const lastPeriod =
+      createdAt > sixMonthBefore
+        ? subMonths(startOfMonth(createdAt), 1)
+        : sixMonthBefore
+
+    const diffInMonth = differenceInMonths(currentMonth, lastPeriod)
+
+    const statistics = []
+
+    for (let i = diffInMonth - 1; i >= 0; i--) {
+      const month = format(addMonths(currentMonth, -i), 'MM-yyyy')
+
+      const count = short.statistics[month] || 0
+      statistics.push({
+        month,
+        count,
+      })
+    }
+
+    return toResponse(ShortenDetailResponse)({ ...short.toJSON(), statistics })
   }
 
   async remove(user: AuthUser, { shortUrl }: ShortenUrlParams): Promise<void> {
@@ -89,13 +120,9 @@ export class ShortenService {
       throw new NotFoundException('Short URL not found')
     }
 
-    const currentDate = new Date()
-    const currentMonth = currentDate.getMonth()
-    const currentYear = currentDate.getFullYear()
+    const month = format(new Date(), 'MM-yyyy')
 
-    const month = `${currentMonth}-${currentYear}`
-
-    this.shorten.updateOne(
+    await this.shorten.updateOne(
       { shortUrl: doc.shortUrl },
       {
         $inc: {
