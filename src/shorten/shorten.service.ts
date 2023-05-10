@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { InjectModel } from '@nestjs/mongoose'
 import {
   addMonths,
@@ -28,7 +29,8 @@ import {
 @Injectable()
 export class ShortenService {
   constructor(
-    @InjectModel(ShortenUrl.name) private shorten: Model<ShortenUrlDoc>
+    @InjectModel(ShortenUrl.name) private shorten: Model<ShortenUrlDoc>,
+    private readonly config: ConfigService
   ) {}
 
   private async checkQuota(userId: string): Promise<void> {
@@ -117,7 +119,8 @@ export class ShortenService {
   async getAndRedirect(shortUrl: string): Promise<RedirectResponse> {
     const doc = await this.shorten.findOne({ shortUrl })
     if (!doc) {
-      throw new NotFoundException('Short URL not found')
+      const url = this.config.get<string>('clientOriginUrls')[0]
+      return { url, statusCode: HttpStatus.PERMANENT_REDIRECT }
     }
 
     const month = format(new Date(), 'MM-yyyy')
