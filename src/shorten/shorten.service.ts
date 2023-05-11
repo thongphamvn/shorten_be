@@ -1,30 +1,19 @@
 import {
   BadRequestException,
   ConflictException,
-  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { InjectModel } from '@nestjs/mongoose'
-import {
-  addMonths,
-  differenceInMonths,
-  format,
-  startOfMonth,
-  subMonths,
-} from 'date-fns'
+import { addDays, format, startOfDay } from 'date-fns'
 import { Model } from 'mongoose'
 import { nanoid } from 'nanoid'
 import { toResponse } from 'src/utils/utils'
 import { AuthUser } from '../auth/auth.guard'
 import { ShortenUrl, ShortenUrlDoc } from '../models/short-url.model'
 import { ShortenUrlDto, ShortenUrlParams } from './dto'
-import {
-  RedirectResponse,
-  ShortenDetailResponse,
-  ShortenResponse,
-} from './response'
+import { ShortenDetailResponse, ShortenResponse } from './response'
 
 @Injectable()
 export class ShortenService {
@@ -81,25 +70,14 @@ export class ShortenService {
       throw new NotFoundException('Short URL not found')
     }
 
-    const currentMonth = startOfMonth(new Date())
-    const sixMonthBefore = addMonths(new Date(currentMonth), -6)
-    const createdAt = new Date(short.createdAt)
-
-    const lastPeriod =
-      createdAt > sixMonthBefore
-        ? subMonths(startOfMonth(createdAt), 1)
-        : sixMonthBefore
-
-    const diffInMonth = differenceInMonths(currentMonth, lastPeriod)
-
+    const currentDate = startOfDay(new Date())
     const statistics = []
 
-    for (let i = diffInMonth - 1; i >= 0; i--) {
-      const month = format(addMonths(currentMonth, -i), 'MM-yyyy')
-
-      const count = short.statistics[month] || 0
+    for (let i = 7; i >= 0; i--) {
+      const day = format(addDays(currentDate, -i), 'MM-dd-yyyy')
+      const count = short.statistics[day] || 0
       statistics.push({
-        month,
+        period: day,
         count,
       })
     }
@@ -114,27 +92,5 @@ export class ShortenService {
     }
 
     await this.shorten.deleteOne({ _id: doc.id })
-  }
-
-  async getAndRedirect(shortUrl: string): Promise<RedirectResponse> {
-    const doc = await this.shorten.findOne({ shortUrl })
-    if (!doc) {
-      const url = this.config.get<string>('clientOriginUrls')[0]
-      return { url, statusCode: HttpStatus.PERMANENT_REDIRECT }
-    }
-
-    const month = format(new Date(), 'MM-yyyy')
-
-    await this.shorten.updateOne(
-      { shortUrl: doc.shortUrl },
-      {
-        $inc: {
-          totalClicks: 1,
-          [`statistics.${month}`]: 1,
-        },
-      }
-    )
-
-    return { url: doc.originalUrl, statusCode: HttpStatus.PERMANENT_REDIRECT }
   }
 }

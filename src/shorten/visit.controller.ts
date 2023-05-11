@@ -1,10 +1,10 @@
 import { Controller, Get, Header, Param, Redirect } from '@nestjs/common'
 import { RedirectResponse } from './response'
-import { ShortenService } from './shorten.service'
+import { VisitService } from './visit.service'
 
 @Controller()
-export class PublicShortenController {
-  constructor(private readonly shorten: ShortenService) {}
+export class VisitController {
+  constructor(private readonly visit: VisitService) {}
 
   @Get(':shortUrl')
   @Redirect()
@@ -12,6 +12,6 @@ export class PublicShortenController {
   async findOneAndRedirect(
     @Param('shortUrl') shortUrl: string
   ): Promise<RedirectResponse> {
-    return this.shorten.getAndRedirect(shortUrl)
+    return this.visit.getAndRedirect(shortUrl)
   }
 }

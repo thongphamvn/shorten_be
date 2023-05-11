@@ -14,7 +14,7 @@ export class ShortenResponse implements ShortenUrlType {
 
 export class Statistics {
   @Expose()
-  month: string
+  period: string
 
   @Expose()
   count: number

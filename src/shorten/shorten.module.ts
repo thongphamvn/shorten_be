@@ -3,9 +3,10 @@ import { MongooseModule } from '@nestjs/mongoose'
 import { ShortenUrl, ShortenUrlSchema } from '../models/short-url.model'
 import { User, UserSchema } from '../models/user.model'
 import { UserModule } from '../user/user.module'
-import { PublicShortenController } from './public.controller'
 import { ShortenController } from './shorten.controller'
 import { ShortenService } from './shorten.service'
+import { VisitController } from './visit.controller'
+import { VisitService } from './visit.service'
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { ShortenService } from './shorten.service'
     ]),
     UserModule,
   ],
-  controllers: [ShortenController, PublicShortenController],
-  providers: [ShortenService],
+  controllers: [ShortenController, VisitController],
+  providers: [ShortenService, VisitService],
 })
 export class ShortenModule {}
