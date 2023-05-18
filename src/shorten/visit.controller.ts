@@ -1,4 +1,5 @@
 import { Controller, Get, Header, Param, Redirect } from '@nestjs/common'
+import { Throttle } from '@nestjs/throttler'
 import { RedirectResponse } from './response'
 import { VisitService } from './visit.service'
 
@@ -6,6 +7,7 @@ import { VisitService } from './visit.service'
 export class VisitController {
   constructor(private readonly visit: VisitService) {}
 
+  @Throttle(3, 60)
   @Get(':shortUrl')
   @Redirect()
   @Header('Cache-Control', 'no-store')
