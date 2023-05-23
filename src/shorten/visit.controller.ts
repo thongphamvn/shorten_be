@@ -14,7 +14,6 @@ import { VisitService } from './visit.service'
 @Injectable()
 export class CustomThrottlerGuard extends ThrottlerGuard {
   getTracker(req: Record<string, string>) {
-    console.log(req.ip, req.url)
     return req.ip + req.url
   }
 }

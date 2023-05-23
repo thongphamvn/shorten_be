@@ -7,10 +7,17 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
+  Query,
   UseGuards,
 } from '@nestjs/common'
 import { AuthUser, AuthorizationGuard } from '../auth/auth.guard'
-import { ShortenUrlDto, ShortenUrlParams } from './dto'
+import {
+  EditShortDto,
+  ShortenUrlDto,
+  ShortenUrlParams,
+  StatisticsQuery,
+} from './dto'
 import { ShortenResponse } from './response'
 import { ShortenService } from './shorten.service'
 
@@ -39,6 +46,24 @@ export class ShortenController {
   ): Promise<ShortenResponse> {
     const shortenUrl = await this.shorten.findOne(user, params)
     return shortenUrl
+  }
+
+  @Get(':shortUrl/stats')
+  async getStatistics(
+    @AuthUser() user: AuthUser,
+    @Param() params: ShortenUrlParams,
+    @Query() query: StatisticsQuery
+  ): Promise<any> {
+    return this.shorten.getStatistics(user, params, query)
+  }
+
+  @Put(':shortUrl')
+  async update(
+    @AuthUser() user: AuthUser,
+    @Param() params: ShortenUrlParams,
+    @Body() shortenUrlDto: EditShortDto
+  ): Promise<ShortenResponse> {
+    return this.shorten.edit(user, params, shortenUrlDto)
   }
 
   @Delete(':shortUrl')

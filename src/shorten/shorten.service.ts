@@ -4,22 +4,27 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
 import { InjectModel } from '@nestjs/mongoose'
-import { addDays, format, startOfDay } from 'date-fns'
 import { Model } from 'mongoose'
 import { nanoid } from 'nanoid'
+import { Statistics, StatisticsDoc } from 'src/models/statistics.model'
 import { toResponse } from 'src/utils/utils'
 import { AuthUser } from '../auth/auth.guard'
 import { ShortenUrl, ShortenUrlDoc } from '../models/short-url.model'
-import { ShortenUrlDto, ShortenUrlParams } from './dto'
-import { ShortenDetailResponse, ShortenResponse } from './response'
+import {
+  EditShortDto,
+  ShortenUrlDto,
+  ShortenUrlParams,
+  StatisticsQuery,
+  StatsPeriod,
+} from './dto'
+import { ShortenResponse, StatsResponse } from './response'
 
 @Injectable()
 export class ShortenService {
   constructor(
     @InjectModel(ShortenUrl.name) private shorten: Model<ShortenUrlDoc>,
-    private readonly config: ConfigService
+    @InjectModel(Statistics.name) private stats: Model<StatisticsDoc>
   ) {}
 
   private async checkQuota(userId: string): Promise<void> {
@@ -29,9 +34,18 @@ export class ShortenService {
     }
   }
 
+  private async findOneOrFail(shortUrl: string, ownerId: string) {
+    const short = await this.shorten.findOne({ shortUrl, ownerId })
+
+    if (!short) {
+      throw new NotFoundException('Short URL not found')
+    }
+    return short
+  }
+
   async create(
     { id }: AuthUser,
-    { originalUrl, customShortUrl }: ShortenUrlDto
+    { originalUrl, customShortUrl, displayName }: ShortenUrlDto
   ): Promise<ShortenResponse> {
     if (customShortUrl) {
       await this.checkQuota(id)
@@ -45,6 +59,7 @@ export class ShortenService {
     }
 
     const doc = await this.shorten.create({
+      displayName,
       originalUrl,
       shortUrl: customShortUrl || nanoid(7),
       ownerId: id,
@@ -60,36 +75,74 @@ export class ShortenService {
       .then(toResponse(ShortenResponse))
   }
 
+  async getStatistics(
+    user: AuthUser,
+    { shortUrl }: ShortenUrlParams,
+    { period }: StatisticsQuery
+  ): Promise<StatsResponse[]> {
+    await this.findOneOrFail(shortUrl, user.id)
+
+    let aggQuery
+    if (period === StatsPeriod['24h']) {
+      aggQuery = [
+        {
+          $match: {
+            timestamp: {
+              $gte: new Date(new Date().getTime() - 24 * 60 * 60 * 1000),
+            },
+          },
+        },
+        {
+          $group: {
+            _id: '$timestamp',
+            count: { $sum: '$count' },
+          },
+        },
+      ]
+    } else {
+      aggQuery = [
+        {
+          $match: {
+            timestamp: {
+              $gte: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000),
+            },
+          },
+        },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } },
+            count: { $sum: '$count' },
+          },
+        },
+      ]
+    }
+
+    const res = await this.stats.aggregate(aggQuery)
+    return res.map((i) => toResponse(StatsResponse)({ ...i, timestamp: i._id }))
+  }
+
   async findOne(
     user: AuthUser,
     { shortUrl }: ShortenUrlParams
   ): Promise<ShortenResponse> {
-    const short = await this.shorten.findOne({ shortUrl, ownerId: user.id })
+    const short = await this.findOneOrFail(shortUrl, user.id)
 
-    if (!short) {
-      throw new NotFoundException('Short URL not found')
-    }
+    return toResponse(ShortenResponse)(short.toJSON())
+  }
 
-    const currentDate = startOfDay(new Date())
-    const statistics = []
+  async edit(
+    user: AuthUser,
+    { shortUrl }: ShortenUrlParams,
+    dto: EditShortDto
+  ): Promise<ShortenResponse> {
+    const short = await this.findOneOrFail(shortUrl, user.id)
 
-    for (let i = 7; i >= 0; i--) {
-      const day = format(addDays(currentDate, -i), 'MM-dd-yyyy')
-      const count = short.statistics[day] || 0
-      statistics.push({
-        period: day,
-        count,
-      })
-    }
-
-    return toResponse(ShortenDetailResponse)({ ...short.toJSON(), statistics })
+    await this.shorten.updateOne({ _id: short.id }, dto)
+    return this.findOne(user, { shortUrl })
   }
 
   async remove(user: AuthUser, { shortUrl }: ShortenUrlParams): Promise<void> {
-    const doc = await this.shorten.findOne({ shortUrl, ownerId: user.id })
-    if (!doc) {
-      throw new NotFoundException('Short URL not found')
-    }
+    const doc = await this.findOneOrFail(shortUrl, user.id)
 
     await this.shorten.deleteOne({ _id: doc.id })
   }

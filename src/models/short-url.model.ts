@@ -45,8 +45,8 @@ export class ShortenUrl implements Omit<ShortenUrlType, 'id'> {
   @Prop({ default: 0 })
   totalClicks: number
 
-  @Prop({ type: Types.Map, of: Number, default: {} })
-  statistics: Record<string, number>
+  @Prop({ type: String, required: false })
+  displayName?: string
 }
 
 const ShortenUrlSchema = SchemaFactory.createForClass(ShortenUrl)

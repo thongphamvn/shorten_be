@@ -9,22 +9,6 @@ export type UserDoc = HydratedDocument<UserType>
   versionKey: false,
   timestamps: true,
   autoCreate: true,
-  toJSON: {
-    virtuals: true,
-    transform: (doc, ret) => {
-      delete ret._id
-      delete ret.__v
-      return ret
-    },
-  },
-  toObject: {
-    virtuals: true,
-    transform: (doc, ret) => {
-      delete ret._id
-      delete ret.__v
-      return ret
-    },
-  },
 })
 export class User implements Omit<UserType, 'id'> {
   @Prop({ required: true, unique: true })

@@ -1,8 +1,9 @@
 import { HttpStatus, Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { InjectModel } from '@nestjs/mongoose'
-import { format } from 'date-fns'
+import { startOfHour } from 'date-fns'
 import { Model } from 'mongoose'
+import { Statistics, StatisticsDoc } from 'src/models/statistics.model'
 import { ShortenUrl, ShortenUrlDoc } from '../models/short-url.model'
 import { RedirectResponse } from './response'
 
@@ -10,6 +11,7 @@ import { RedirectResponse } from './response'
 export class VisitService {
   constructor(
     @InjectModel(ShortenUrl.name) private shorten: Model<ShortenUrlDoc>,
+    @InjectModel(Statistics.name) private stats: Model<StatisticsDoc>,
     private readonly config: ConfigService
   ) {}
 
@@ -20,17 +22,27 @@ export class VisitService {
       return { url, statusCode: HttpStatus.PERMANENT_REDIRECT }
     }
 
-    const day = format(new Date(), 'MM-dd-yyyy')
-
-    await this.shorten.updateOne(
+    const updateTotal = this.shorten.updateOne(
       { shortUrl: doc.shortUrl },
       {
         $inc: {
           totalClicks: 1,
-          [`statistics.${day}`]: 1,
         },
       }
     )
+
+    const updateStats = this.stats.updateOne(
+      {
+        short: shortUrl,
+        timestamp: startOfHour(new Date()),
+      },
+      {
+        $inc: { count: 1 },
+      },
+      { upsert: true }
+    )
+
+    await Promise.all([updateTotal, updateStats])
 
     return { url: doc.originalUrl, statusCode: HttpStatus.PERMANENT_REDIRECT }
   }
