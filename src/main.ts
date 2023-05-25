@@ -26,18 +26,15 @@ async function bootstrap() {
     maxAge: 86400,
   })
 
-  console.log('is in dev', configService.get('inDev'))
-  if (configService.get('inDev')) {
-    const config = new DocumentBuilder()
-      .setTitle('Shorten URL APIs')
-      .setDescription('Shorten URL APIs')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .build()
+  const config = new DocumentBuilder()
+    .setTitle('Shorten URL APIs')
+    .setDescription('Shorten URL APIs')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build()
 
-    const document = SwaggerModule.createDocument(app, config)
-    SwaggerModule.setup('api', app, document)
-  }
+  const document = SwaggerModule.createDocument(app, config)
+  SwaggerModule.setup('api', app, document)
 
   const port = configService.get('port')
   await app.listen(port || 3000)
