@@ -4,10 +4,12 @@ export type AppEnv = {
   audience: string
   port: number
   clientOriginUrls: string[]
+  inDev: boolean
 }
 
 export const appEnv = (): AppEnv => {
   const config = {
+    inDev: process.env.NODE_ENV === 'production',
     port: parseInt(process.env.PORT, 10) || 3000,
     mongoUri: process.env.MONGO_URI,
     issuerBaseUrl: process.env.ISSUER_BASE_URL,

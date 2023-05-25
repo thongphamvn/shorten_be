@@ -26,20 +26,22 @@ async function bootstrap() {
     maxAge: 86400,
   })
 
-  const config = new DocumentBuilder()
-    .setTitle('Shorten URL APIs')
-    .setDescription('Shorten URL APIs')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build()
+  if (configService.get('inDev')) {
+    const config = new DocumentBuilder()
+      .setTitle('Shorten URL APIs')
+      .setDescription('Shorten URL APIs')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build()
 
-  const document = SwaggerModule.createDocument(app, config)
-  SwaggerModule.setup('api', app, document)
+    const document = SwaggerModule.createDocument(app, config)
+    SwaggerModule.setup('api', app, document)
+  }
 
   const port = configService.get('port')
   await app.listen(port || 3000)
 
-  Logger.log(`🚀 Application is running on: http://localhost:${port}`)
+  Logger.log(`🚀 Application is running port: ${port}`)
 }
 
 bootstrap()
