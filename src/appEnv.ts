@@ -9,7 +9,7 @@ export type AppEnv = {
 
 export const appEnv = (): AppEnv => {
   const config = {
-    inDev: process.env.NODE_ENV === 'production',
+    inDev: process.env.NODE_ENV !== 'production',
     port: parseInt(process.env.PORT, 10) || 3000,
     mongoUri: process.env.MONGO_URI,
     issuerBaseUrl: process.env.ISSUER_BASE_URL,
