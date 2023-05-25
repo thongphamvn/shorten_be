@@ -3,14 +3,13 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   Post,
   Put,
   Query,
   UseGuards,
 } from '@nestjs/common'
+import { ApiNoContentResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger'
 import { AuthUser, AuthorizationGuard } from '../auth/auth.guard'
 import {
   EditShortDto,
@@ -18,15 +17,17 @@ import {
   ShortenUrlParams,
   StatisticsQuery,
 } from './dto'
-import { ShortenResponse } from './response'
+import { ShortenResponse, StatsResponse } from './response'
 import { ShortenService } from './shorten.service'
 
 @Controller('shorten')
+@ApiTags('Config')
 @UseGuards(AuthorizationGuard)
 export class ShortenController {
   constructor(private readonly shorten: ShortenService) {}
 
   @Post()
+  @ApiOkResponse({ type: ShortenResponse })
   async create(
     @AuthUser() user: AuthUser,
     @Body() shortenUrlDto: ShortenUrlDto
@@ -35,11 +36,13 @@ export class ShortenController {
   }
 
   @Get()
+  @ApiOkResponse({ type: ShortenResponse, isArray: true })
   async findAll(@AuthUser() user: AuthUser): Promise<ShortenResponse[]> {
     return this.shorten.findAll(user)
   }
 
   @Get(':shortUrl')
+  @ApiOkResponse({ type: ShortenResponse })
   async findOne(
     @AuthUser() user: AuthUser,
     @Param() params: ShortenUrlParams
@@ -48,16 +51,18 @@ export class ShortenController {
     return shortenUrl
   }
 
+  @ApiOkResponse({ type: StatsResponse, isArray: true })
   @Get(':shortUrl/stats')
   async getStatistics(
     @AuthUser() user: AuthUser,
     @Param() params: ShortenUrlParams,
     @Query() query: StatisticsQuery
-  ): Promise<any> {
+  ): Promise<StatsResponse[]> {
     return this.shorten.getStatistics(user, params, query)
   }
 
   @Put(':shortUrl')
+  @ApiOkResponse({ type: ShortenResponse })
   async update(
     @AuthUser() user: AuthUser,
     @Param() params: ShortenUrlParams,
@@ -66,8 +71,8 @@ export class ShortenController {
     return this.shorten.edit(user, params, shortenUrlDto)
   }
 
+  @ApiNoContentResponse()
   @Delete(':shortUrl')
-  @HttpCode(HttpStatus.NO_CONTENT)
   async delete(
     @AuthUser() user: AuthUser,
     @Param() params: ShortenUrlParams

@@ -7,6 +7,7 @@ import {
   Redirect,
   UseGuards,
 } from '@nestjs/common'
+import { ApiTags } from '@nestjs/swagger'
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler'
 import { RedirectResponse } from './response'
 import { VisitService } from './visit.service'
@@ -19,6 +20,7 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
 }
 
 @Controller()
+@ApiTags('Visit Link')
 export class VisitController {
   constructor(private readonly visit: VisitService) {}
 
